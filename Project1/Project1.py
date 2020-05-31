@@ -137,7 +137,6 @@ def page_rank(
     c = dict.fromkeys(A, 1.0)  # The start vector, all values are 1.0
 
     for i in range(max_iterations):
-        print("Runde: ", i)
         c_previous = c
         c = dict.fromkeys(c_previous, 0)
         for node in c:
