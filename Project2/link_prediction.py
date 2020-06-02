@@ -1,6 +1,8 @@
 import networkx as nx
 from node2vec import Node2Vec
 from math import sqrt
+from numpy import dot
+from numpy.linalg import norm
 from node2vec.edges import HadamardEmbedder
 
 
@@ -53,21 +55,20 @@ def adamic_adar(G, edges):
 
 
 def cosine_similarity(author1, author2):
-    return author1.dot(author2) / \
-           (sqrt((author1.dot(author1) * author2.dot(author2))))
+    return dot(author1, author2) / (norm(author1)*norm(author2))
 
 
 def node2vec_embedding(
         G,
         validation_pair,
-        walk_length=20,
-        num_walks=50,
-        p=1,
-        q=1):
+        walk_length=10,
+        num_walks=20,
+        p=1.4,
+        q=0.9):
     scores = dict()
     node2vec = Node2Vec(
         G,
-        dimensions=128,
+        dimensions=20,
         walk_length=walk_length,
         num_walks=num_walks,
         p=p,
@@ -119,7 +120,6 @@ def main():
         files['VAL_POS'], files['VAL_NEG'])
 
     neighbors = get_neighbors(G_training)
-
     jaccard = jaccard_similarity(validation_pairs, neighbors)
     adamic = adamic_adar(G_training, validation_pairs)
     n2v = node2vec_embedding(G_training, validation_pairs)
@@ -132,7 +132,6 @@ def main():
     evaluate(top_100_jaccard, G_val_pos, 'Jaccard')
     evaluate(top_100_adamic, G_val_pos, 'Adamic Adar')
     evaluate(top_100_n2v, G_val_pos, 'Node2Vec')
-
 
 if __name__ == '__main__':
     main()
