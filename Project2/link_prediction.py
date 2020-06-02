@@ -1,9 +1,9 @@
 import networkx as nx
 from node2vec import Node2Vec
-from math import sqrt
 from numpy import dot
 from numpy.linalg import norm
 from node2vec.edges import HadamardEmbedder
+from random import choice
 
 
 def load_graph(input_file):
@@ -61,10 +61,10 @@ def cosine_similarity(author1, author2):
 def node2vec_embedding(
         G,
         validation_pair,
-        walk_length=10,
+        walk_length=15,
         num_walks=20,
-        p=1.4,
-        q=0.9):
+        p=1.2,
+        q=1.5):
     scores = dict()
     node2vec = Node2Vec(
         G,
@@ -101,8 +101,25 @@ def evaluate(calculated_results, ground_truth, measure=''):
         pair_reversed = get_reversed_pair(pair)
         if pair[0] in truth_pairs or pair_reversed in truth_pairs:
             score += 1
-    accuracy = (score / len(truth_pairs)) * 100
+    accuracy = float((score / len(truth_pairs)) * 100)
     print("The accuracy is %f %% when using measure: %s" % (accuracy, measure))
+
+def gen_neg_links(G_train, G_val_pos, G_val_neg, G_test, length):
+    G_neg_links = nx.Graph()
+    size = 0
+    while size < length:
+        print(size)
+        node1 = choice(list(G_train.nodes()))
+        node2 = choice(list(G_train.nodes()))
+        if not G_train.has_edge(node1, node2) \
+            and not G_val_pos.has_edge(node1, node2) \
+            and not G_val_neg.has_edge(node1, node2) \
+            and not G_test.has_edge(node1, node2):
+            G_neg_links.add_edge(node1, node2)
+        size += 1
+    print(G_neg_links.edges())
+    return G_neg_links
+
 
 
 def main():
@@ -115,10 +132,11 @@ def main():
     G_val_pos = load_graph(files['VAL_POS'])
     G_val_neg = load_graph(files['VAL_NEG'])
     G_test = load_graph(files['TEST'])
+    G_neg = gen_neg_links(G_training, G_val_pos, G_val_neg, G_test, 10)
 
     validation_pairs = merge_validation_sets(
         files['VAL_POS'], files['VAL_NEG'])
-
+    """
     neighbors = get_neighbors(G_training)
     jaccard = jaccard_similarity(validation_pairs, neighbors)
     adamic = adamic_adar(G_training, validation_pairs)
@@ -132,6 +150,6 @@ def main():
     evaluate(top_100_jaccard, G_val_pos, 'Jaccard')
     evaluate(top_100_adamic, G_val_pos, 'Adamic Adar')
     evaluate(top_100_n2v, G_val_pos, 'Node2Vec')
-
+    """
 if __name__ == '__main__':
     main()
