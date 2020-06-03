@@ -1,9 +1,9 @@
-import networkx as nx
-from node2vec import Node2Vec
+from random import choice
 from numpy import dot
 from numpy.linalg import norm
+import networkx as nx
+from node2vec import Node2Vec
 from node2vec.edges import HadamardEmbedder
-from random import choice
 from sklearn.neural_network import MLPClassifier
 
 
@@ -109,7 +109,8 @@ def embedding_similarity(model, validation_pairs):
     for pair in validation_pairs:
         author1 = pair[0]
         author2 = pair[1]
-        scores[author1 + ' ' + author2] = cosine_similarity(model.wv[author1], model.wv[author2])
+        scores[author1 + ' ' +
+               author2] = cosine_similarity(model.wv[author1], model.wv[author2])
     return scores
 
 
@@ -141,13 +142,14 @@ def classify_embeddings(model, training_set, test_set, training_labels):
         score[node1 + ' ' + node2] = predict[i][1]
     return score
 
+
 def node2vec_embedding(
-    G_training,
-    dimensions=64,
-    walk_length=10,
-    num_walks=10,
-    p=1,
-    q=1.2
+        G_training,
+        dimensions=64,
+        walk_length=10,
+        num_walks=10,
+        p=1,
+        q=1.2
 ):
     """
     Train a node2vec model using word2vec, skip-gram and negative sampling
@@ -239,9 +241,9 @@ def process_dict(top_100_list):
     return results
 
 
-def write_to_file(input, filename):
+def write_to_file(input_data, filename):
     with open(filename, 'w') as file:
-        file.writelines(input)
+        file.writelines(input_data)
 
 
 def main():
@@ -282,7 +284,11 @@ def main():
     # ----------------- EMBEDDING ----------------------
     n2v_model_classifier = node2vec_embedding(G_train_complete)
     n2v_model_cos_sim = node2vec_embedding(G_training)
-    classified_score = classify_embeddings(n2v_model_classifier, training_set, validation_pairs, training_labels)
+    classified_score = classify_embeddings(
+        n2v_model_classifier,
+        training_set,
+        validation_pairs,
+        training_labels)
     embedding_sim = embedding_similarity(n2v_model_cos_sim, validation_pairs)
 
     top_100_n2v_classifier = get_sorted_top_k(classified_score)
