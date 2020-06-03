@@ -2,7 +2,7 @@ import networkx as nx
 from node2vec import Node2Vec
 from numpy import dot
 from numpy.linalg import norm
-from node2vec.edges import HadamardEmbedder, WeightedL2Embedder
+from node2vec.edges import HadamardEmbedder
 from random import choice
 from sklearn.neural_network import MLPClassifier
 
@@ -129,13 +129,12 @@ def classify_embeddings(model, training_set, test_set, training_labels):
     x_test = [edge_embeddings[pair] for pair in test_set]
 
     # Using MLPClassifier from sklearn as binary classifier
-    classifier = MLPClassifier()
+    classifier = MLPClassifier(random_state=1)
     print("Classifying...")
     classify = classifier.fit(x_train_embedded, training_labels)
 
     predict = classify.predict_proba(x_test)
     score = dict()
-    count = 0
     for i in range(len(test_set)):
         node1 = test_set[i][0]
         node2 = test_set[i][1]
@@ -229,7 +228,7 @@ def generate_neg_links(
                 and not G_val_neg.has_edge(node1, node2) \
                 and not G_test.has_edge(node1, node2):
             neg_links.append(node1 + ' ' + node2 + '\n')
-        size += 1
+            size += 1
     return neg_links
 
 
@@ -261,7 +260,7 @@ def main():
     test_set = [pair for pair in G_test.edges()]
     # neg_links = generate_neg_links(G_training, G_val_pos, G_val_neg, G_test, length_multiplier=1)
     # write_to_file(neg_links, "data/training_negative1.txt")
-    validation_pairs, validation_labels = merge_data_sets(
+    validation_pairs, _ = merge_data_sets(
         files['VAL_POS'], files['VAL_NEG'], labelling=True
     )
     training_set, training_labels = merge_data_sets(
@@ -283,8 +282,8 @@ def main():
     # ----------------- EMBEDDING ----------------------
     n2v_model_classifier = node2vec_embedding(G_train_complete)
     n2v_model_cos_sim = node2vec_embedding(G_training)
-    embedding_sim = embedding_similarity(n2v_model_cos_sim, validation_pairs)
     classified_score = classify_embeddings(n2v_model_classifier, training_set, validation_pairs, training_labels)
+    embedding_sim = embedding_similarity(n2v_model_cos_sim, validation_pairs)
 
     top_100_n2v_classifier = get_sorted_top_k(classified_score)
     top_100_n2v_sim = get_sorted_top_k(embedding_sim)
